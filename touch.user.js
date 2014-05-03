@@ -187,7 +187,7 @@ var touch_pad = {
         
         touch_pad.position('.stadiumcover',
             0, 0,
-            touch_pad.parameters.original_width * touch_pad.parameters.position_x - 5, touch_pad.parameters.original_height);
+            touch_pad.parameters.original_width * touch_pad.parameters.position_x, touch_pad.parameters.original_height);
     },
 
     init_settings: function () {
@@ -222,8 +222,8 @@ var touch_pad = {
             $('body')
                 .append('<div class="touch_overlay" style="cursor:crosshair;z-index:99"></div>')
                 .append('<style type="text/css">.touchborder{border:red solid 1px;}</style>')
-                .append('<div class="stadiumcover" style="z-index:99">Pokemon Stadium Hidden</div>')
-                .append('<style type="text/css">.stadiumcover{background-color:black; color:white; border: white solid 1px;}</style>');
+                .append('<div class="stadiumcover" style="z-index:99"><img src="http://s15.postimg.org/87rz7s6vv/helix_poster_without_watermark.png"></div>')
+                .append('<style type="text/css">.stadiumcover{background-color:black;} .stadiumcover img { max-height:100%; max-width:100%;}</style>');
 
 
             $('.touch_overlay').unbind()
