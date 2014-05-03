@@ -107,19 +107,27 @@ var forIn = function (obj, f) {
 };
 
 var touch_pad = {
-    parameters: {
-        position_x: 0.359,
-        position_y: 0.548,
-        original_height: 434,
-        bar_height: 30,
-        ratio: 9 / 16,
-        screen_height: 192,
-        screen_width: 256
-    },
+    parameters: (function(){
+        var o = {};
+
+        o.ratio = 9 / 16;
+        o.original_height = 434;
+        o.original_width = 434 / o.ratio;
+        
+        o.bar_height = 30;
+        
+        o.position_x = 0.359;
+        o.position_y = 0.548;
+        o.screen_height = 192;
+        o.screen_width = 256;
+        
+        return o;
+    }()),
 
     settings: {
         show_border: new Setting('show_border', true),
-        direct_send: new Setting('direct_send', false)
+        direct_send: new Setting('direct_send', false),
+        hide_stadium: new Setting('direct_send', false),
     },
     settings_key: 'twitch-touches-pokemon',
 
@@ -137,7 +145,7 @@ var touch_pad = {
     },
     // adjust position of the box, parameters are relative position of top-left corner of the box within stream screen
     // 0 <= rx,ry <= 1
-    position: function (rx, ry) {
+    position: function (selector, rx, ry, screen_width, screen_height) {
         try{
             var base = $('#player');
             if(!base.is('object')) // in tinytwitch #player is that object.
@@ -160,12 +168,12 @@ var touch_pad = {
                 left_margin = (base.width() - real_width) / 2;
                 top_margin = 0;
             }
-            $('.touch_overlay').offset({
+            $(selector).offset({
                 top: Math.floor(base_offset.top + top_margin + ry * real_height),
                 left: Math.floor(base_offset.left + left_margin + rx * real_width)
             })
-                .height(Math.floor(touch_pad.parameters.screen_height * touch_pad.scale))
-                .width(Math.floor(touch_pad.parameters.screen_width * touch_pad.scale));
+                .height(Math.floor(screen_height * touch_pad.scale))
+                .width(Math.floor(screen_width * touch_pad.scale));
         } catch(err) {
             console.error(err); //don't quit
         }
@@ -173,7 +181,13 @@ var touch_pad = {
     },
 
     aim: function () {
-        touch_pad.position(touch_pad.parameters.position_x, touch_pad.parameters.position_y); // rough estimation No.2
+        touch_pad.position('.touch_overlay',
+            touch_pad.parameters.position_x, touch_pad.parameters.position_y,
+            touch_pad.parameters.screen_width, touch_pad.parameters.screen_height);
+        
+        touch_pad.position('.stadiumcover',
+            0, 0,
+            touch_pad.parameters.original_width * touch_pad.parameters.position_x - 5, touch_pad.parameters.original_height);
     },
 
     init_settings: function () {
@@ -207,7 +221,9 @@ var touch_pad = {
 
             $('body')
                 .append('<div class="touch_overlay" style="cursor:crosshair;z-index:99"></div>')
-                .append('<style type="text/css">.touchborder{border:red solid 1px;}</style>');
+                .append('<style type="text/css">.touchborder{border:red solid 1px;}</style>')
+                .append('<div class="stadiumcover" style="z-index:99">Pokemon Stadium Hidden</div>')
+                .append('<style type="text/css">.stadiumcover{background-color:black; color:white; border: white solid 1px;}</style>');
 
 
             $('.touch_overlay').unbind()
@@ -234,6 +250,7 @@ var touch_pad = {
                 .append($('<div class="chat-menu-content"></div>')
                     .append('<p><label><input id="ttp-show-border" type="checkbox"> Show border</label></p>')
                     .append('<p><label><input id="ttp-direct-send" type="checkbox"> Send on clicking</label></p>')
+                    .append('<p><label><input id="ttp-hide-stadium" type="checkbox"> Hide Pokemon Stadium</label></p>')
                     .append($('<button>Reposition Touchpad</button>').click(function () {
                         touch_pad.aim();
                     })));
@@ -244,9 +261,13 @@ var touch_pad = {
         // bind inputs to settings
         touch_pad.settings.show_border.bind('#ttp-show-border');
         touch_pad.settings.direct_send.bind('#ttp-direct-send');
+        touch_pad.settings.hide_stadium.bind('#ttp-hide-stadium');
         // observe settings
         touch_pad.settings.show_border.observe(function (shown) {
             $('.touch_overlay').toggleClass("touchborder", shown);
+        });
+        touch_pad.settings.hide_stadium.observe(function (shown) {
+            $('.stadiumcover').toggle(shown);
         });
         // load settings
         touch_pad.load_settings();
